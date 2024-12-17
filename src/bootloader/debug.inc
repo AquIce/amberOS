@@ -1,7 +1,11 @@
 ; src/bootloader/debug.inc
+; REQUIRES src/bootloader/print.inc
 
 ; ===== Functions ======
 
+; Prints a register
+; Arguments
+;	reg16		: register to read from
 printreg16:
         mov di, outstr16        ; di=outstr16
         mov ax, [reg16]         ; ax=reg16

@@ -1,4 +1,4 @@
-i# scripts/bootloader.sh
+# scripts/bootloader.sh
 
 # ===== GENERAL =====
 

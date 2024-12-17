@@ -1,5 +1,10 @@
 dochar:
 	call printchar
+
+; Write a string to a memory location
+; Arguments
+;	es	: address of memory to write to
+;	si	: string to write
 printstr:
 	lodsb         		; ds:si (string char) to AL
         cmp al, 0
@@ -8,6 +13,11 @@ printstr:
         mov byte [xpos], 0      ; back to left |
         ret
 
+; Write a char to a memory location
+; Arguments
+;	al	: char to write
+;	xpos	: x position of the buffer
+;	ypos	: y position of the buffer
 printchar:
         mov ah, 0x0f            ; attrib = white (F) on black (0)
                                 ; ax is ah _ al -> attrib _ char
