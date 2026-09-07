@@ -20,6 +20,9 @@ void foundation_log(
 	const char* arg = __builtin_va_arg(args, const char*);
 	kterm_write(arg);
 	kterm_endline();
+
+	(void)line;
+	(void)fmt;
 }
 
 _Noreturn void foundation_panic(
@@ -32,4 +35,9 @@ _Noreturn void foundation_panic(
     ...
 ) {
 	panic(fmt);
+	(void)kind;
+	(void)file;
+	(void)line;
+	(void)function;
+	(void)expression;
 }
