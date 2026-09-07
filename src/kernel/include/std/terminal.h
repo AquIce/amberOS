@@ -2,9 +2,12 @@
 #define __AMBER_KERNEL_TERM__
 
 #include <std/ktypes.h>
-#include <base/foundation/macros.h>
 
-/* VGA text mode dimensions */
+#include <base/foundation/macros.h>
+#include <base/foundation/memory/memory.h>
+
+#define VGA_MEMORY ((volatile u16*)0xB8000)
+
 #define TERMINAL_WIDTH  80
 #define TERMINAL_HEIGHT 25
 
@@ -33,7 +36,7 @@ typedef struct {
 	u16 column;
 } Cursor;
 
-void kterm_init(void);
+void kterm_init(const MemorySource* memory_source);
 
 void kterm_putchar(char c);
 void kterm_write(const char* str);

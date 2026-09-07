@@ -1,8 +1,8 @@
+#include <std/kio.h>
 #include <std/terminal.h>
 
 #include <base/foundation/macros.h>
-
-#define VGA_MEMORY ((volatile u16*)0xB8000)
+#include <base/foundation/memory/memory.h>
 
 // --= Local Header =--
 
@@ -18,17 +18,76 @@ internal_fn volatile u16* vga_cell(u16 row, u16 column) {
 	return &VGA_MEMORY[row * TERMINAL_WIDTH + column];
 }
 
+typedef struct KTermLine KTermLine;
+
+struct KTermLine {
+	KTermLine* prev;
+	KTermLine* next;
+	u16 buffer[TERMINAL_WIDTH];
+};
+
 typedef struct {
     VGAColor foreground;
     VGAColor background;
 	Cursor cursor;
+	KTermLine* current_line;
 } KTerm;
 
 persistent KTerm terminal;
 
+internal void kterm_line_setup(KTermLine* first_line, u16 buffer_count);
+
+internal void kterm_render(void);
+
+internal_fn KTermLine* nth_offset_line(KTermLine* base_line, usize offset) {
+	while(offset--) {
+		if(base_line == nullptr) {
+			panic("Invalid nth offset");
+		}
+		base_line = base_line->next;
+	}
+	return base_line;
+}
+
+internal_fn u16* buffer_cell(u16 row, u16 column) {
+	return &nth_offset_line(
+		terminal.current_line, row
+	)->buffer[column];
+}
+
 // --= Implementation =--
 
-void kterm_init(void) {
+
+internal void kterm_line_setup(KTermLine* first_line, u16 buffer_count) {
+	KTermLine* prev = nullptr;
+	for(u16 i = 0; i < buffer_count; i++) {
+		first_line->prev = prev;
+		first_line->next = nullptr;
+		if(prev) {
+			prev->next = first_line;
+		}
+		prev = first_line;
+		first_line++;
+	}
+}
+
+internal void kterm_render(void) {
+	for(u16 row = 0; row < TERMINAL_HEIGHT; row++) {
+		for(u16 column = 0; column < TERMINAL_WIDTH; column++) {
+			*vga_cell(row, column) = *buffer_cell(row, column);
+		}
+	}
+}
+
+void kterm_init(const MemorySource* memory_source) {
+
+	u16 buffer_count = TERMINAL_HEIGHT * 2;
+	KTermLine* first_line = MEMORY_SOURCE_RESERVE_NT(KTermLine, memory_source, buffer_count);
+	if(!first_line) {
+		panic("Fatal memory error while trying to allocate terminal lines buffer.");
+	}
+	kterm_line_setup(first_line, buffer_count);
+
 	terminal = (KTerm){
 		.foreground = VGA_COLOR_WHITE,
 		.background = VGA_COLOR_BLACK,
@@ -36,6 +95,7 @@ void kterm_init(void) {
 			.row = 0,
 			.column = 0,
 		},
+		.current_line = first_line,
 	};
 
 	kterm_clear();
@@ -48,16 +108,16 @@ void kterm_putchar(char c) {
         terminal.cursor.row++;
 
         if(terminal.cursor.row >= TERMINAL_HEIGHT) {
-			goto scroll_behavior;
+			goto scroll_down_behavior;
         }
 
-        return;
+        goto render;
     }
 
-	*vga_cell(
-        terminal.cursor.row,
-        terminal.cursor.column
-    ) = vga_entry(
+	*buffer_cell(
+		terminal.cursor.row, 
+		terminal.cursor.column
+	) = vga_entry(
         c,
         vga_color(terminal.foreground, terminal.background)
     );
@@ -70,13 +130,24 @@ void kterm_putchar(char c) {
     }
 
     if(terminal.cursor.row >= TERMINAL_HEIGHT) {
-		goto scroll_behavior;
+		goto scroll_down_behavior;
     }
-	return;
+	goto render;
 
-scroll_behavior:
-	terminal.cursor.row = TERMINAL_HEIGHT - 1;
-	// TODO: [FEATURE] Add scrolling
+	// WARN: DO NOT REMOVE THE LONE SEMICOLON PLEASE ._.
+scroll_down_behavior:
+	;
+	KTermLine* last_line = nth_offset_line(terminal.current_line, TERMINAL_HEIGHT);
+	if(last_line->next) {
+		// TODO: Redraw screen
+		terminal.current_line = terminal.current_line->next;
+		terminal.cursor.row--;
+		goto render;
+	}
+	panic("Welp");
+
+render:
+	kterm_render();
 }
 void kterm_write(const char* str) {
 	while(*str) {

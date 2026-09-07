@@ -37,24 +37,24 @@ void memory_init(MemorySource* memory_source) {
 			continue;
 		}
 
-		kterm_write("Entry #");
-		kterm_write_dec(i);
-		kterm_endline();
-		kterm_write(" base:   ");
-		kterm_write_hex64(entry->base);
-		kterm_endline();
-
-		kterm_write(" length: ");
-		kterm_write_hex64(entry->length);
-		kterm_write(" (");
-		kterm_write_dec(entry->length / MB(1));
-		kterm_write(" MB)");
-		kterm_endline();
-
-		kterm_write(" end:    ");
-		kterm_write_hex64(entry->base + entry->length);
-		kterm_endline();
-
+		// kterm_write("Entry #");
+		// kterm_write_dec(i);
+		// kterm_endline();
+		// kterm_write(" base:   ");
+		// kterm_write_hex64(entry->base);
+		// kterm_endline();
+		//
+		// kterm_write(" length: ");
+		// kterm_write_hex64(entry->length);
+		// kterm_write(" (");
+		// kterm_write_dec(entry->length / MB(1));
+		// kterm_write(" MB)");
+		// kterm_endline();
+		//
+		// kterm_write(" end:    ");
+		// kterm_write_hex64(entry->base + entry->length);
+		// kterm_endline();
+		
 		*memory_source = buffer_memory_source_create(
 			(void*)(uptr)entry->base,
 			entry->length - 2 * sizeof(BufferAllocCtx),
@@ -63,7 +63,5 @@ void memory_init(MemorySource* memory_source) {
 				alignof(BufferAllocCtx)
 			)
 		);
-
-		// panic("Kernel Panic Test");
 	}
 }
