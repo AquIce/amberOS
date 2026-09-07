@@ -1,0 +1,8 @@
+CompileFlags:
+  Add:
+    - "-m32"
+    - "-ffreestanding"
+    - "-fno-pie"
+    - "-fno-stack-protector"
+    - "-I/home/aquice/dev/amberOS/src/kernel/include"
+    - "-I/home/aquice/dev/amberOS/src/kernel/base/include"
