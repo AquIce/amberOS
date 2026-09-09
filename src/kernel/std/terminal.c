@@ -41,7 +41,7 @@ internal void kterm_render(void);
 
 internal_fn KTermLine* nth_offset_line(KTermLine* base_line, usize offset) {
 	while(offset--) {
-		if(base_line == nullptr) {
+		if(base_line == nullptr || base_line->next == nullptr) {
 			panic("Invalid nth offset");
 		}
 		base_line = base_line->next;
@@ -215,9 +215,10 @@ void kterm_clear(void) {
 
     for(u16 row = 0; row < TERMINAL_HEIGHT; row++) {
         for(u16 column = 0; column < TERMINAL_WIDTH; column++) {
-            *vga_cell(row, column) = vga_entry(' ', color);
+            *buffer_cell(row, column) = vga_entry(' ', color);
         }
     }
+	kterm_render();
 
     terminal.cursor = (Cursor){
         .row = 0,

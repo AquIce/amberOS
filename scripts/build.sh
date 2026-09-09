@@ -34,7 +34,7 @@ mkdir -p bin/disks
 
 # ===== BOOTLOADER =====
 
-echo "[1/5] Building bootloader..."
+echo "[1/6] Building bootloader..."
 
 nasm \
     -f bin \
@@ -43,17 +43,27 @@ nasm \
 
 # ===== KERNEL ENTRY =====
 
-echo "[2/5] Building kernel entry..."
+echo "[2/6] Building kernel entry..."
 
 nasm \
     -f elf32 \
     -g -F dwarf \
-    src/kernel/entry.asm \
+    src/kernel/asm/entry.asm \
     -o bin/kernel/asm/entry.o
+
+# ===== KERNEL ASM =====
+
+echo "[3/6] Building kernel ASM..."
+
+nasm \
+    -f elf32 \
+    -g -F dwarf \
+    src/kernel/asm/exception_handlers.asm \
+    -o bin/kernel/asm/exception_handlers.o
 
 # ===== KERNEL C =====
 
-echo "[3/5] Building kernel C..."
+echo "[4/6] Building kernel C..."
 
 KERNEL_OBJECTS=()
 
@@ -99,13 +109,14 @@ done < <( \
 
 # ===== LINK =====
 
-echo "[4/5] Linking kernel..."
+echo "[5/6] Linking kernel..."
 
 "$LD" \
     -m elf_i386 \
     -T linker.ld \
     -o bin/kernel/kernel.elf \
     bin/kernel/asm/entry.o \
+	bin/kernel/asm/exception_handlers.o \
 	"${KERNEL_OBJECTS[@]}"
 
 # ===== ELF -> BINARY =====
@@ -117,7 +128,7 @@ echo "[4/5] Linking kernel..."
 
 # ===== DISK =====
 
-echo "[5/5] Creating disk image..."
+echo "[6/6] Creating disk image..."
 
 rm -f bin/disks/disk.flp
 
