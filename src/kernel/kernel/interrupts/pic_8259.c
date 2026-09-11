@@ -8,7 +8,11 @@ void PIC_sendEOI(u8 irq) {
 	outb(PIC_COMMAND(PIC1),PIC_EOI);
 }
 
-void PIC_remap(int offset1, int offset2) {
+void pic_remap(u8 offset1, u8 offset2) {
+
+	u8 master_mask = inb(PIC_DATA(PIC1));
+    u8 slave_mask  = inb(PIC_DATA(PIC2));
+
 	// Starts initialization sequence (in cascade mode) on both PICs
 	outb(PIC_COMMAND(PIC1), ICW1_INIT | ICW1_ICW4);
 	io_wait();
@@ -35,11 +39,13 @@ void PIC_remap(int offset1, int offset2) {
 	io_wait();
 
 	// Unmask both PICs.
-	outb(PIC_DATA(PIC1), 0);
-	outb(PIC_DATA(PIC2), 0);
+	outb(PIC_DATA(PIC1), master_mask);
+	outb(PIC_DATA(PIC2), slave_mask);
 }
 
 void IRQ_set_mask(u8 IRQ_line) {
+	if(IRQ_line >= 2 * PIC_SIZE)
+		return;
     u16 port;
     u8 value;
 
@@ -54,6 +60,8 @@ void IRQ_set_mask(u8 IRQ_line) {
 }
 
 void IRQ_clear_mask(u8 IRQ_line) {
+	if(IRQ_line >= 2 * PIC_SIZE)
+		return;
     u16 port;
     u8 value;
 
@@ -67,7 +75,7 @@ void IRQ_clear_mask(u8 IRQ_line) {
     outb(port, value);
 }
 
-internal u16 __pic_get_irq_reg(int ocw3) {
+internal u16 __pic_get_irq_reg(u8 ocw3) {
     // OCW3 to PIC CMD to get the register values
 	
     outb(PIC_COMMAND(PIC1), ocw3);

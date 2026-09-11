@@ -27,14 +27,7 @@ void PIC_sendEOI(u8 irq);
 
 #define CASCADE_IRQ 2
 
-/*
-arguments:
-	offset1 - vector offset for master PIC
-		vectors on the master become offset1..offset1+7
-	offset2 - same for slave PIC: offset2..offset2+7
-*/
-void PIC_remap(int offset1, int offset2);
-
+void pic_remap(u8 offset1, u8 offset2);
 
 void IRQ_set_mask(u8 IRQ_line);
 void IRQ_clear_mask(u8 IRQ_line);
