@@ -1,11 +1,10 @@
 #include <kernel/interrupts/IRQ.h>
+
 #include <kernel/interrupts/pic_8259.h>
-#include <std/terminal.h>
+#include <kernel/interrupts/irq/keyboard_irq.h>
+#include <kernel/interrupts/irq/pit_irq.h>
 
 persistent IRQ_Handler irq_handlers[IRQ_COUNT];
-
-internal void pit_irq(InterruptFrame* frame);
-internal void keyboard_irq(InterruptFrame* frame);
 
 void irq_init(void) {
 	for(u8 i = 0; i < IRQ_COUNT; i++) {
@@ -41,25 +40,4 @@ void irq_handler(InterruptFrame *frame) {
 	}
 
     PIC_sendEOI(irq);
-}
-
-internal volatile u32 timer_ticks;
-
-u32 pit_ticks(void) {
-	return timer_ticks;
-}
-
-internal void pit_irq(InterruptFrame* frame) {
-    (void)frame;
-    timer_ticks++;
-}
-
-internal void keyboard_irq(InterruptFrame* frame) {
-    (void)frame;
-
-    u8 scancode = inb(0x60);
-
-    kterm_write("Key: ");
-    kterm_write_hex(scancode);
-    kterm_write("\n");
 }
